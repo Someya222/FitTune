@@ -4,7 +4,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import WorkoutGenerator from "./pages/WorkoutGenerator";
 import WorkoutPlayer from "./pages/WorkoutPlayer";
-
+import Progress from "./pages/Progress";
 
 function App() {
   return (
@@ -15,6 +15,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/generate" element={<WorkoutGenerator />} />
         <Route path="/player" element={<WorkoutPlayer />} />
+        <Route path="/progress" element={<Progress />} />
       </Routes>
     </BrowserRouter>
   );
