@@ -1,5 +1,7 @@
 import Exercise from "../../models/Exercise.js";
 import WorkoutHistory from "../../models/WorkoutHistory.js";
+import { buildWorkoutPlan } from "../../services/workoutEngine.service.js";
+import { calculateCalories } from "../../services/calorie.service.js";
 
 // 🔹 Generate Workout
 export const generateWorkout = async (req, res) => {
@@ -11,22 +13,9 @@ export const generateWorkout = async (req, res) => {
       equipment: { $in: [equipment, "none"] }
     });
 
-    const shuffled = exercises.sort(() => 0.5 - Math.random());
+    const plan = buildWorkoutPlan(exercises, duration);
 
-    let selected = [];
-    let totalTime = 0;
-
-    for (let ex of shuffled) {
-      if (totalTime + ex.duration <= duration * 60) {
-        selected.push(ex);
-        totalTime += ex.duration;
-      }
-    }
-
-    res.json({
-      totalTime,
-      exercises: selected
-    });
+    res.json(plan);
 
   } catch (error) {
     res.status(500).json({
@@ -39,7 +28,9 @@ export const generateWorkout = async (req, res) => {
 // 🔹 Save Workout
 export const saveWorkout = async (req, res) => {
   try {
-    const { userId, exercises, totalDuration, totalCalories } = req.body;
+    const { userId, exercises, totalDuration } = req.body;
+
+    const totalCalories = calculateCalories(exercises);
 
     const workout = await WorkoutHistory.create({
       userId,
