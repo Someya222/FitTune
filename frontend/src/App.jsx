@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import WorkoutGenerator from "./pages/WorkoutGenerator";
 import WorkoutPlayer from "./pages/WorkoutPlayer";
 import Progress from "./pages/Progress";
+import WorkoutSummary from "./pages/WorkoutSummary";
+import ProfileSetup from "./pages/ProfileSetup";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/generate" element={<WorkoutGenerator />} />
         <Route path="/player" element={<WorkoutPlayer />} />
         <Route path="/progress" element={<Progress />} />
+        <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
       </Routes>
     </BrowserRouter>
   );

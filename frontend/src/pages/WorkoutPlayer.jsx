@@ -103,17 +103,18 @@ useEffect(() => {
 
       const token = localStorage.getItem("token");
 
-      await axios.post(
-        "http://localhost:5000/api/workouts/complete",
-        { exercises },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      const res = await axios.post(
+  "http://localhost:5000/api/workouts/complete",
+  { exercises },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  }
+);
 
-      navigate("/progress");
+// redirect using workout ID
+navigate(`/workout-summary/${res.data._id}`);
 
     } catch (e) {
       console.error(e);

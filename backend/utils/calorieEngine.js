@@ -1,6 +1,19 @@
 export const calculateCalories = (met, weight, duration) => {
-  if (!met || !weight || !duration) return 0;
+  const safeMet = Number(met);
+  const safeWeight = Number(weight);
+  const safeDuration = Number(duration);
 
-  const hours = duration / 3600;
-  return Math.round(met * weight * hours);
+  if (
+    isNaN(safeMet) ||
+    isNaN(safeWeight) ||
+    isNaN(safeDuration)
+  ) {
+    return 0;
+  }
+
+  const hours = safeDuration / 3600;
+
+  const calories = safeMet * safeWeight * hours;
+
+  return Number(calories.toFixed(2));
 };

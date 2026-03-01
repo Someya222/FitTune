@@ -47,8 +47,44 @@ export const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ token, userId: user._id });
+    res.json({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  profileCompleted: user.profileCompleted,
+  token,
+});
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UPDATE PROFILE
+export const updateProfile = async (req, res) => {
+  try {
+    const { weight, height, gender } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (weight) user.weight = weight;
+    if (height) user.height = height;
+    if (gender) user.gender = gender;
+
+    user.profileCompleted = true;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user
+    });
+
+  } catch (error) {
+    console.error("PROFILE UPDATE ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
