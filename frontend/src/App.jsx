@@ -7,19 +7,28 @@ import WorkoutPlayer from "./pages/WorkoutPlayer";
 import Progress from "./pages/Progress";
 import WorkoutSummary from "./pages/WorkoutSummary";
 import ProfileSetup from "./pages/ProfileSetup";
+import MainLayout from "./layouts/MainLayout";
+import AppLayout from "./layouts/AppLayout";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Public Pages */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/generate" element={<WorkoutGenerator />} />
-        <Route path="/player" element={<WorkoutPlayer />} />
-        <Route path="/progress" element={<Progress />} />
-        <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
-        <Route path="/profile-setup" element={<ProfileSetup />} />
+
+        {/* Pages WITH Navbar */}
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/generate" element={<WorkoutGenerator />} />
+          <Route path="/player" element={<WorkoutPlayer />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
+          <Route path="/profile-setup" element={<ProfileSetup />} />
+        </Route>
+
       </Routes>
     </BrowserRouter>
   );
