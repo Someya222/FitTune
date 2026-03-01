@@ -5,16 +5,28 @@ export default function Progress() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      const userId = localStorage.getItem("userId");
-      const res = await axios.get(
-        `http://localhost:5000/api/workout/history/${userId}`
-      );
-      setHistory(res.data);
-    };
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    fetchHistory();
-  }, []);
+      const res = await axios.get(
+        "http://localhost:5000/api/workouts/history",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      setHistory(res.data);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchHistory();
+}, []);
 
   return (
     <div className="min-h-screen bg-black text-white p-6">

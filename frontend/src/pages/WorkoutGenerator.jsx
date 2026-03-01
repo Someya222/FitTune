@@ -12,19 +12,29 @@ export default function WorkoutGenerator() {
   const navigate = useNavigate(); // ✅ INSIDE component
 
   const generateWorkout = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/workout/generate",
-        { level, duration, equipment }
-      );
-      setWorkout(res.data);
-    } catch (err) {
-      alert("Failed to generate workout");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    const res = await axios.post(
+      "http://localhost:5000/api/workouts/generate",
+      { level, duration, equipment },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    setWorkout(res.data);
+
+  } catch (err) {
+    alert("Failed to generate workout");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">

@@ -1,10 +1,16 @@
 import express from "express";
-import { generateWorkout, saveWorkout, getWorkoutHistory } from "./workout.controller.js";
+import {
+  generateWorkout,
+  getWorkoutHistory,
+  completeWorkout
+} from "./workout.controller.js";
+
+import { protect } from "../auth/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/generate", generateWorkout);
-router.post("/save", saveWorkout);
-router.get("/history/:userId", getWorkoutHistory);
+router.post("/generate", protect, generateWorkout);
+router.get("/history", protect, getWorkoutHistory);
+router.post("/complete", protect, completeWorkout);
 
 export default router;

@@ -94,29 +94,35 @@ export default function WorkoutPlayer() {
   }, [paused, started, isResting, index, finished]);
 
   /* 💾 Save + redirect */
-  useEffect(() => {
-    if (!finished) return;
+useEffect(() => {
+  if (!finished) return;
 
-    const save = async () => {
+  const save = async () => {
+    try {
       speak("Workout complete");
 
-      try {
-        await axios.post("http://localhost:5000/api/workout/save", {
-          userId: localStorage.getItem("userId"),
-          exercises,
-          totalCalories: calculateCalories(),
-          totalDuration: exercises.reduce((s, ex) => s + ex.duration, 0),
-        });
-      } catch (e) {
-        console.error(e);
-      }
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        "http://localhost:5000/api/workouts/complete",
+        { exercises },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
 
       navigate("/progress");
-    };
 
-    save();
-  }, [finished]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
+  save();   // ✅ Call it here
+
+}, [finished]);
   const currentExercise = exercises[index];
 
   return (
