@@ -3,19 +3,26 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export default function SpotifySuccess() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { search } = useLocation();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("access_token");
+    const params = new URLSearchParams(search);
 
-    if (token) {
-      localStorage.setItem("spotify_token", token);
-      localStorage.setItem("spotify_connected", "true");
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
 
-      navigate("/dashboard");
+    if (accessToken) {
+      localStorage.setItem("spotify_token", accessToken);
     }
+
+    if (refreshToken) {
+      localStorage.setItem("spotify_refresh_token", refreshToken);
+    }
+
+    localStorage.setItem("spotify_connected", "true");
+
+    navigate("/dashboard");
   }, []);
 
-  return <div>Connecting to Spotify...</div>;
+  return <div>Connecting Spotify...</div>;
 }

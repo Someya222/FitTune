@@ -1,3 +1,4 @@
+import { fetchWithAuth } from "../utils/spotifyFetch";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -21,11 +22,9 @@ export default function Dashboard() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/spotify/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetchWithAuth(
+  "http://localhost:5000/api/spotify/me"
+);
 
       // ❌ TOKEN INVALID
       if (res.status === 401) {

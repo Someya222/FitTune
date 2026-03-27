@@ -1,4 +1,5 @@
 import useSpotifyPlayer from "../hooks/useSpotifyPlayer";
+import { fetchWithAuth } from "../utils/spotifyFetch";
 import { useEffect, useState } from "react";
 
 export default function MusicLibrary() {
@@ -24,43 +25,26 @@ export default function MusicLibrary() {
   // ✅ FETCH SONGS
   useEffect(() => {
     const fetchSongs = async () => {
-  try {
-    const token = localStorage.getItem("spotify_token");
+      try {
+        const token = localStorage.getItem("spotify_token");
 
-    if (!token) {
-      setSongs([]);
-      return;
-    }
+        if (!token) {
+          setSongs([]);
+          return;
+        }
 
-    const res = await fetch(
-      "http://localhost:5000/api/spotify/search?q=workout",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        const res = await fetchWithAuth(
+          "http://localhost:5000/api/spotify/search?q=workout"
+        );
+
+        const data = await res.json();
+
+        setSongs(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching songs:", err);
+        setSongs([]);
       }
-    );
-
-    // ❌ TOKEN EXPIRED
-    if (res.status === 401) {
-      alert("Session expired. Please reconnect Spotify.");
-
-      localStorage.removeItem("spotify_token");
-      localStorage.removeItem("spotify_connected");
-
-      setSongs([]);
-      return;
-    }
-
-    const data = await res.json();
-
-    setSongs(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("Error fetching songs:", err);
-    setSongs([]);
-  }
-};
-
+    };
 
     if (token) fetchSongs();
   }, [token]);
@@ -77,7 +61,7 @@ export default function MusicLibrary() {
       }
 
       try {
-        // ✅ STEP 1: Transfer playback to device
+        // ✅ STEP 1: Transfer playback
         await fetch("https://api.spotify.com/v1/me/player", {
           method: "PUT",
           headers: {
@@ -90,10 +74,10 @@ export default function MusicLibrary() {
           }),
         });
 
-        // ⏳ WAIT (IMPORTANT)
+        // ⏳ WAIT
         await new Promise((res) => setTimeout(res, 1000));
 
-        // ✅ STEP 2: Play on that device (FIXED URL)
+        // ✅ STEP 2: Play song
         await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
           {
@@ -108,7 +92,7 @@ export default function MusicLibrary() {
           }
         );
 
-        // ✅ update current track UI
+        // ✅ Update UI
         window.currentTrack = {
           name: song.name,
           artist: song.artists[0]?.name,
@@ -131,7 +115,6 @@ export default function MusicLibrary() {
       audio.play();
       setCurrentAudio(audio);
 
-      // update UI
       setCurrentTrack({
         name: song.name,
         artist: song.artists[0]?.name,
@@ -140,7 +123,7 @@ export default function MusicLibrary() {
     }
   };
 
-  // ✅ Sync current playing track
+  // ✅ Sync current track
   useEffect(() => {
     const interval = setInterval(() => {
       if (window.currentTrack) {

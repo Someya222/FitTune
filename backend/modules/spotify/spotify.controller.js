@@ -15,7 +15,9 @@ export const callback = async (req, res) => {
   try {
     const data = await spotifyService.getTokens(code);
 
-    const { access_token, refresh_token } = data;
+    res.redirect(
+  `http://localhost:5173/spotify-success?access_token=${access_token}&refresh_token=${refresh_token}`
+);
 
     // TODO: Save in DB (next step)
     
@@ -63,5 +65,36 @@ export const profile = async (req, res) => {
     }
 
     res.status(500).json({ message: "Error fetching profile" });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        Authorization:
+          "Basic " +
+          Buffer.from(
+            process.env.SPOTIFY_CLIENT_ID +
+              ":" +
+              process.env.SPOTIFY_CLIENT_SECRET
+          ).toString("base64"),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token,
+      }),
+    });
+
+    const data = await response.json();
+
+    res.json(data);
+  } catch (err) {
+    console.error("Refresh error:", err);
+    res.status(500).json({ message: "Failed to refresh token" });
   }
 };

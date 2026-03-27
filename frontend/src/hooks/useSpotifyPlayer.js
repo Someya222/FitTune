@@ -29,7 +29,15 @@ export default function useSpotifyPlayer(token) {
 
     const player = new window.Spotify.Player({
       name: "FitTune Player",
-      getOAuthToken: (cb) => cb(token),
+      getOAuthToken: async (cb) => {
+  let token = localStorage.getItem("spotify_token");
+
+  if (!token) {
+    token = await refreshAccessToken();
+  }
+
+  cb(token);
+},
       volume: 0.5,
     });
 
@@ -71,3 +79,30 @@ export default function useSpotifyPlayer(token) {
 
   return { deviceId };
 }
+
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem("spotify_refresh_token");
+
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/spotify/refresh", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    const data = await res.json();
+
+    if (data.access_token) {
+      localStorage.setItem("spotify_token", data.access_token);
+      return data.access_token;
+    }
+  } catch (err) {
+    console.error("Refresh failed", err);
+  }
+
+  return null;
+};
