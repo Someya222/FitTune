@@ -1,88 +1,124 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
+  const [isSpotifyConnected, setIsSpotifyConnected] = useState(false);
+  const [plan, setPlan] = useState("Unknown");
+
+  const handleSpotifyConnect = () => {
+    window.location.href = "http://localhost:5000/api/spotify/login";
+  };
+
+   useEffect(() => {
+  const token = localStorage.getItem("spotify_token");
+
+  if (!token) {
+    setIsSpotifyConnected(false);
+    return;
+  }
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/spotify/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // ❌ TOKEN INVALID
+      if (res.status === 401) {
+        console.log("Token expired → disconnecting");
+
+        localStorage.removeItem("spotify_token");
+        localStorage.removeItem("spotify_connected");
+        localStorage.removeItem("spotify_product");
+
+        setIsSpotifyConnected(false);
+        setPlan("Unknown");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data?.product) {
+        localStorage.setItem("spotify_product", data.product);
+        localStorage.setItem("spotify_connected", "true");
+
+        setIsSpotifyConnected(true);
+        setPlan(data.product);
+      }
+    } catch (err) {
+      console.error("Error fetching Spotify profile", err);
+      setIsSpotifyConnected(false);
+    }
+  };
+
+  fetchProfile();
+}, []);
+
   return (
-    <div className="space-y-16">
+    <div className="space-y-16 p-8 text-white">
 
-      {/* HERO */}
       <div>
-        <h1 className="text-5xl md:text-6xl font-bold mb-4">
-          Ready to train?
-        </h1>
+        <h1 className="text-5xl font-bold mb-4">Ready to train?</h1>
 
-        {/* Accent Line */}
-        <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mb-6" />
-
-        <p className="text-gray-400 text-lg max-w-xl">
+        <p className="text-gray-400">
           AI-powered workouts synced with your music.
         </p>
 
-        {/* Separator */}
-        <div className="h-px bg-white/10 mt-10"></div>
+        {!isSpotifyConnected && (
+          <button
+            onClick={handleSpotifyConnect}
+            className="mt-6 bg-green-500 px-6 py-2 rounded-lg"
+          >
+            Connect Spotify 🎵
+          </button>
+        )}
+
+        <p className="mt-4 text-sm text-gray-400">
+          Plan: {plan}
+        </p>
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-6">
 
-        {/* Primary Card */}
-        <div
-          onClick={() => navigate("/generate")}
-          className="cursor-pointer bg-gradient-to-br from-[#1a1a3a] to-[#13132e] border border-primary/40 p-6 rounded-2xl shadow-lg shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-purple-500/30"
-        >
-          <h3 className="text-lg font-semibold mb-2">
-            🏋 Generate Workout
-          </h3>
-          <p className="text-sm text-gray-400">
-            Create an AI-personalized training plan.
-          </p>
+        <div onClick={() => navigate("/generate")} className="cursor-pointer p-6 bg-gray-800 rounded-xl">
+          🏋 Generate Workout
         </div>
 
-        <div
-          onClick={() => navigate("/progress")}
-          className="cursor-pointer bg-gradient-to-br from-[#1a1a3a] to-[#13132e] border border-white/5 p-6 rounded-2xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-purple-500/10"
-        >
-          <h3 className="text-lg font-semibold mb-2">
-            📊 View Progress
-          </h3>
-          <p className="text-sm text-gray-400">
-            Track calories, streaks and stats.
-          </p>
+        <div onClick={() => navigate("/progress")} className="cursor-pointer p-6 bg-gray-800 rounded-xl">
+          📊 View Progress
         </div>
 
-        <div
-          className="cursor-pointer bg-gradient-to-br from-[#1a1a3a] to-[#13132e] border border-white/5 p-6 rounded-2xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-purple-500/10"
-        >
-          <h3 className="text-lg font-semibold mb-2">
-            🎵 Music Library
-          </h3>
-          <p className="text-sm text-gray-400">
-            Browse playlists and workout music.
-          </p>
+        <div onClick={() => navigate("/music")} className="cursor-pointer p-6 bg-gray-800 rounded-xl">
+          🎵 Music Player
         </div>
 
       </div>
 
-      {/* TWO COLUMN ROW */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="bg-gray-800 p-6 rounded-xl">
+        <h3>🎵 Now Playing</h3>
 
-        <div className="bg-gradient-to-br from-[#1a1a3a] to-[#13132e] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <h3 className="font-semibold mb-2">🎯 Daily Challenge</h3>
-          <p className="text-gray-400 text-sm">
-            Complete today’s challenge to boost your streak.
-          </p>
-        </div>
+        {isSpotifyConnected ? (
+          <>
+            <p className="text-green-400">Spotify Connected 🎧</p>
 
-        <div className="bg-gradient-to-br from-[#1a1a3a] to-[#13132e] border border-white/5 p-6 rounded-2xl shadow-xl">
-          <h3 className="font-semibold mb-2">🎵 Now Playing</h3>
-          <p className="text-gray-400 text-sm">
-            Spotify integration coming soon.
-          </p>
-        </div>
-
+            <button
+              onClick={() => navigate("/music")}
+              className="mt-3 underline"
+            >
+              Open Player →
+            </button>
+          </>
+        ) : (
+          <p>Connect Spotify to start music</p>
+        )}
       </div>
-
+        <button onClick={handleSpotifyConnect}>
+  {isSpotifyConnected ? "Reconnect Spotify" : "Connect Spotify"}
+</button>
     </div>
   );
 }

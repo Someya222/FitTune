@@ -1,7 +1,11 @@
 import { NavLink } from "react-router-dom";
-import logo from "../assets/branding/logo.png"; // adjust path if needed
+import logo from "../assets/branding/logo.png";
 
 export default function Navbar() {
+  // 🔥 Spotify connection state
+  const isSpotifyConnected =
+    localStorage.getItem("spotify_connected") === "true";
+
   return (
     <div className="h-20 border-b border-white/10 flex items-center justify-between px-10 bg-[#111132] shadow-lg">
 
@@ -62,10 +66,15 @@ export default function Navbar() {
 
         {/* Mini Player */}
         <div className="hidden md:flex items-center gap-3 bg-gradient-to-br from-[#1a1a3a] to-[#13132e] shadow-xl px-4 py-2 rounded-xl border border-white/10 hover:border-primary/30 transition">
-          <span className="text-sm text-gray-400">No music playing</span>
+          
+          <span className="text-sm text-gray-400">
+            {isSpotifyConnected ? "Spotify Connected 🎵" : "No music playing"}
+          </span>
+
           <button className="text-white hover:text-primary transition">
             ⏯
           </button>
+
         </div>
 
         {/* Avatar */}

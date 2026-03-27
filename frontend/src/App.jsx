@@ -8,7 +8,10 @@ import Progress from "./pages/Progress";
 import WorkoutSummary from "./pages/WorkoutSummary";
 import ProfileSetup from "./pages/ProfileSetup";
 import MainLayout from "./layouts/MainLayout";
-import AppLayout from "./layouts/AppLayout";
+import AppLayout from "./layouts/AppLayout"
+import SpotifySuccess from "./pages/SpotifySuccess";;
+import MusicLibrary from "./pages/MusicLibrary";
+import MusicPlayer from "./pages/MusicPlayer";
 
 function App() {
   return (
@@ -27,6 +30,9 @@ function App() {
           <Route path="/progress" element={<Progress />} />
           <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/spotify-success" element={<SpotifySuccess />} />
+          <Route path="/music" element={<MusicLibrary />} />
+          <Route path="/music" element={<MusicPlayer />} />
         </Route>
 
       </Routes>
