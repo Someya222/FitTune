@@ -2,6 +2,7 @@ import * as spotifyService from "../../services/spotify.service.js";
 
 export const login = (req, res) => {
   const scope =
+
     "user-read-email user-read-private streaming user-modify-playback-state user-read-playback-state";
 
   const url = `https://accounts.spotify.com/authorize?client_id=${process.env.SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${process.env.SPOTIFY_REDIRECT_URI}&scope=${encodeURIComponent(scope)}`;
@@ -15,17 +16,21 @@ export const callback = async (req, res) => {
   try {
     const data = await spotifyService.getTokens(code);
 
-    res.redirect(
-  `http://localhost:5173/spotify-success?access_token=${access_token}&refresh_token=${refresh_token}`
-);
+    if (!data) {
+      return res.status(500).send("Token fetch failed");
+    }
 
-    // TODO: Save in DB (next step)
-    
+    const access_token = data.access_token;
+    const refresh_token = data.refresh_token;
+
+    console.log("ACCESS:", access_token);
+    console.log("REFRESH:", refresh_token);
+
     res.redirect(
-      `http://localhost:5173/spotify-success?access_token=${access_token}`
+      `http://localhost:5173/spotify-success?access_token=${access_token}&refresh_token=${refresh_token}`
     );
   } catch (err) {
-    console.error(err);
+    console.error("CALLBACK ERROR:", err);
     res.status(500).send("Spotify auth failed");
   }
 };

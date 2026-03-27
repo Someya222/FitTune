@@ -20,29 +20,37 @@ export const getAuthURL = () => {
   );
 };
 
-// 🔁 Get Tokens
+// 🔁 Get Tokens (FIXED)
 export const getTokens = async (code) => {
-  const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-  const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+  try {
+    const response = await axios.post(
+      "https://accounts.spotify.com/api/token",
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
+      }),
+      {
+        headers: {
+          Authorization:
+            "Basic " +
+            Buffer.from(
+              process.env.SPOTIFY_CLIENT_ID +
+                ":" +
+                process.env.SPOTIFY_CLIENT_SECRET
+            ).toString("base64"),
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
 
-  const response = await axios.post(
-    "https://accounts.spotify.com/api/token",
-    new URLSearchParams({
-      code,
-      redirect_uri: REDIRECT_URI,
-      grant_type: "authorization_code",
-    }),
-    {
-      headers: {
-        Authorization:
-          "Basic " +
-          Buffer.from(CLIENT_ID + ":" + CLIENT_SECRET).toString("base64"),
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    }
-  );
+    console.log("TOKEN RESPONSE:", response.data); // ✅ DEBUG
 
-  return response.data;
+    return response.data; // ✅ IMPORTANT
+  } catch (err) {
+    console.error("TOKEN ERROR:", err.response?.data || err.message);
+    return null; // ✅ prevents crash
+  }
 };
 
 // 🔍 Search Songs
