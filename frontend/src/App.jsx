@@ -11,32 +11,36 @@ import MainLayout from "./layouts/MainLayout";
 import AppLayout from "./layouts/AppLayout"
 import SpotifySuccess from "./pages/SpotifySuccess";;
 import MusicLibrary from "./pages/MusicLibrary";
-import MusicPlayer from "./pages/MusicPlayer";
+import MusicPlayer from "./components/MusicPlayer";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+  <BrowserRouter>
+    <Routes>
 
-        {/* Public Pages */}
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      {/* Public Pages */}
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-        {/* Pages WITH Navbar */}
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/generate" element={<WorkoutGenerator />} />
-          <Route path="/player" element={<WorkoutPlayer />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-          <Route path="/spotify-success" element={<SpotifySuccess />} />
-          <Route path="/music" element={<MusicLibrary />} />
-          <Route path="/music" element={<MusicPlayer />} />
-        </Route>
+      {/* Pages WITH Navbar */}
+      <Route element={<AppLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/generate" element={<WorkoutGenerator />} />
+        <Route path="/player" element={<WorkoutPlayer />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/workout-summary/:id" element={<WorkoutSummary />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/spotify-success" element={<SpotifySuccess />} />
+        <Route path="/music" element={<MusicLibrary />} />
+      </Route>
 
-      </Routes>
-    </BrowserRouter>
+    </Routes>
+
+    {/* ✅ GLOBAL PLAYER (IMPORTANT) */}
+    <MusicPlayer />
+
+  </BrowserRouter>
+    
   );
 }
 

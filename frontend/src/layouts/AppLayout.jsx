@@ -15,13 +15,13 @@ export default function AppLayout() {
       {/* Main Area */}
       <div className="flex">
 
-        {/* Sidebar (desktop only) */}
+        {/* Sidebar */}
         <div className="hidden lg:block w-60 border-r border-white/10">
           <Sidebar />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-8">
+        {/* Content ✅ pb-28 added so nothing hides under the player */}
+        <div className="flex-1 p-8 pb-28 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

@@ -20,7 +20,7 @@ export default function MusicPlayer() {
     }
   }, [deviceId]);
 
-  // Poll Spotify every 1s
+  // Poll Spotify every 1s for current playback state
   useEffect(() => {
     if (!token) return;
 
@@ -42,7 +42,7 @@ export default function MusicPlayer() {
           setDuration(data.item?.duration_ms ?? 0);
         }
       } catch (err) {
-        console.error("Polling error:", err);
+        console.error("Player polling error:", err);
       }
     }, 1000);
 
@@ -61,6 +61,7 @@ export default function MusicPlayer() {
     setTimeout(() => { pausePollRef.current = false; }, 2000);
   };
 
+  // ⏸▶ Play / Pause
   const handlePlayPause = async () => {
     await withPausedPoll(async () => {
       if (isPlaying) {
@@ -71,7 +72,8 @@ export default function MusicPlayer() {
         });
       } else {
         setIsPlaying(true);
-        if (!deviceId) return;
+        const did = deviceId || window.spotifyDeviceId;
+        if (!did) return;
 
         await fetch("https://api.spotify.com/v1/me/player", {
           method: "PUT",
@@ -79,13 +81,13 @@ export default function MusicPlayer() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ device_ids: [deviceId], play: false }),
+          body: JSON.stringify({ device_ids: [did], play: false }),
         });
 
         await new Promise((r) => setTimeout(r, 800));
 
         await fetch(
-          `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
+          `https://api.spotify.com/v1/me/player/play?device_id=${did}`,
           {
             method: "PUT",
             headers: {
@@ -98,6 +100,7 @@ export default function MusicPlayer() {
     });
   };
 
+  // ⏭ Next
   const nextSong = async () => {
     await withPausedPoll(async () => {
       await fetch("https://api.spotify.com/v1/me/player/next", {
@@ -107,6 +110,7 @@ export default function MusicPlayer() {
     });
   };
 
+  // ⏮ Previous
   const prevSong = async () => {
     await withPausedPoll(async () => {
       await fetch("https://api.spotify.com/v1/me/player/previous", {
@@ -116,8 +120,8 @@ export default function MusicPlayer() {
     });
   };
 
-  // ✅ DON'T return null — always render the bar
-  if (!token) return null; // only hide if not logged in at all
+  // Only hide if not logged in at all
+  if (!token) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-20 bg-[#0d0d2b] border-t border-[#2a2a5a] px-6 flex items-center justify-between z-[9999]">
@@ -141,7 +145,6 @@ export default function MusicPlayer() {
             </div>
           </>
         ) : (
-          // ✅ Idle state — still shows the bar
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded bg-[#1a1a3a] flex items-center justify-center flex-shrink-0">
               <span className="text-2xl">🎵</span>
