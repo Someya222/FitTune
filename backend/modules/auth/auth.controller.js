@@ -59,6 +59,19 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// GET PROFILE
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // UPDATE PROFILE
 export const updateProfile = async (req, res) => {
   try {
@@ -73,6 +86,10 @@ export const updateProfile = async (req, res) => {
     if (weight) user.weight = weight;
     if (height) user.height = height;
     if (gender) user.gender = gender;
+    
+    if (req.body.musicPreferences) {
+      user.musicPreferences = req.body.musicPreferences;
+    }
 
     user.profileCompleted = true;
 

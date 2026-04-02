@@ -16,6 +16,8 @@ export const refreshAccessToken = async () => {
 
     if (data.access_token) {
       localStorage.setItem("spotify_token", data.access_token);
+      // 🔥 Notify context to re-initialize
+      window.dispatchEvent(new CustomEvent("spotify-token-updated", { detail: data.access_token }));
       return data.access_token;
     }
   } catch (err) {

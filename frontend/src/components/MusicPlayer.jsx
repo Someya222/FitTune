@@ -1,53 +1,25 @@
-import { useEffect, useState, useRef } from "react";
-import useSpotifyPlayer from "../hooks/useSpotifyPlayer";
+import { useSpotify } from "../context/SpotifyContext";
+import { useState, useEffect } from "react";
 
 export default function MusicPlayer() {
-  const token = localStorage.getItem("spotify_token");
-  const { deviceId } = useSpotifyPlayer(token);
+  const [scrubValue, setScrubValue] = useState(null);
+  const { 
+    currentTrack, 
+    isPlaying, 
+    progress, 
+    duration, 
+    deviceId, 
+    togglePlay, 
+    nextTrack, 
+    prevTrack, 
+    seek,
+    token
+  } = useSpotify();
 
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [deviceReady, setDeviceReady] = useState(false);
-
-  const pausePollRef = useRef(false);
-
+  // Reset scrub value when track changes
   useEffect(() => {
-    if (deviceId) {
-      window.spotifyDeviceId = deviceId;
-      setDeviceReady(true);
-    }
-  }, [deviceId]);
-
-  // Poll Spotify every 1s for current playback state
-  useEffect(() => {
-    if (!token) return;
-
-    const interval = setInterval(async () => {
-      if (pausePollRef.current) return;
-
-      try {
-        const res = await fetch("https://api.spotify.com/v1/me/player", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.status === 204 || res.status === 202) return;
-
-        if (res.ok) {
-          const data = await res.json();
-          setCurrentTrack(data.item ?? null);
-          setIsPlaying(data.is_playing ?? false);
-          setProgress(data.progress_ms ?? 0);
-          setDuration(data.item?.duration_ms ?? 0);
-        }
-      } catch (err) {
-        console.error("Player polling error:", err);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [token]);
+    setScrubValue(null);
+  }, [currentTrack?.id]);
 
   const formatTime = (ms) => {
     const m = Math.floor(ms / 60000);
@@ -55,77 +27,25 @@ export default function MusicPlayer() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const withPausedPoll = async (fn) => {
-    pausePollRef.current = true;
-    await fn();
-    setTimeout(() => { pausePollRef.current = false; }, 2000);
+  const handleSeek = (e) => {
+    const val = parseInt(e.target.value);
+    setScrubValue(val);
   };
 
-  // ⏸▶ Play / Pause
-  const handlePlayPause = async () => {
-    await withPausedPoll(async () => {
-      if (isPlaying) {
-        setIsPlaying(false);
-        await fetch("https://api.spotify.com/v1/me/player/pause", {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        setIsPlaying(true);
-        const did = deviceId || window.spotifyDeviceId;
-        if (!did) return;
-
-        await fetch("https://api.spotify.com/v1/me/player", {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ device_ids: [did], play: false }),
-        });
-
-        await new Promise((r) => setTimeout(r, 800));
-
-        await fetch(
-          `https://api.spotify.com/v1/me/player/play?device_id=${did}`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-    });
+  const handleSeekEnd = () => {
+    if (scrubValue !== null) {
+      seek(scrubValue);
+      // Wait for SDK state to sync back before clearing scrubValue
+      setTimeout(() => setScrubValue(null), 1000);
+    }
   };
 
-  // ⏭ Next
-  const nextSong = async () => {
-    await withPausedPoll(async () => {
-      await fetch("https://api.spotify.com/v1/me/player/next", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    });
-  };
-
-  // ⏮ Previous
-  const prevSong = async () => {
-    await withPausedPoll(async () => {
-      await fetch("https://api.spotify.com/v1/me/player/previous", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    });
-  };
-
-  // Only hide if not logged in at all
   if (!token) return null;
 
-  return (
-    <div className="fixed bottom-0 left-0 right-0 h-20 bg-[#0d0d2b] border-t border-[#2a2a5a] px-6 flex items-center justify-between z-[9999]">
+  const displayProgress = scrubValue !== null ? scrubValue : progress;
 
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-20 bg-[#0d0d2b]/95 backdrop-blur-md border-t border-[#2a2a5a] px-6 flex items-center justify-between z-[9999]">
       {/* Track info — left */}
       <div className="flex items-center gap-4 w-1/3 min-w-0">
         {currentTrack ? (
@@ -133,7 +53,7 @@ export default function MusicPlayer() {
             <img
               src={currentTrack.album?.images[0]?.url}
               alt=""
-              className="w-12 h-12 rounded flex-shrink-0"
+              className="w-12 h-12 rounded flex-shrink-0 shadow-lg"
             />
             <div className="overflow-hidden">
               <p className="text-white font-semibold text-sm truncate">
@@ -147,65 +67,74 @@ export default function MusicPlayer() {
         ) : (
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded bg-[#1a1a3a] flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🎵</span>
+              <span className="text-2xl text-gray-400">🎵</span>
             </div>
             <div>
               <p className="text-gray-400 text-sm">No track playing</p>
               <p className="text-gray-600 text-xs">
-                {deviceReady ? "Device ready" : "Connecting..."}
+                {deviceId ? "Device ready" : "Connecting Spotify..."}
               </p>
             </div>
           </div>
-        )}
+        ) }
       </div>
 
       {/* Controls + progress — center */}
-      <div className="flex flex-col items-center w-1/3 gap-1">
-        <div className="flex gap-5 items-center">
+      <div className="flex flex-col items-center w-5/12 gap-1">
+        <div className="flex gap-6 items-center">
           <button
-            onClick={prevSong}
-            className="text-gray-400 hover:text-white text-xl transition"
+            onClick={prevTrack}
+            className="text-gray-400 hover:text-white text-xl transition transform active:scale-90"
           >
             ⏮
           </button>
 
           <button
-            onClick={handlePlayPause}
-            disabled={!deviceReady}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-lg transition ${
-              deviceReady
-                ? "bg-green-500 hover:bg-green-400 cursor-pointer"
-                : "bg-gray-600 cursor-not-allowed"
+            onClick={togglePlay}
+            disabled={!deviceId}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xl transition transform hover:scale-105 active:scale-95 ${
+              deviceId
+                ? "bg-white !text-black shadow-lg cursor-pointer"
+                : "bg-gray-700 cursor-not-allowed opacity-50"
             }`}
           >
             {isPlaying ? "⏸" : "▶"}
           </button>
 
           <button
-            onClick={nextSong}
-            className="text-gray-400 hover:text-white text-xl transition"
+            onClick={nextTrack}
+            className="text-gray-400 hover:text-white text-xl transition transform active:scale-90"
           >
             ⏭
           </button>
         </div>
 
         {/* Progress bar */}
-        <div className="flex items-center gap-2 w-full text-xs text-gray-500">
-          <span className="w-8 text-right">{formatTime(progress)}</span>
-          <div className="flex-1 bg-gray-700 rounded-full h-1">
-            <div
-              className="bg-green-500 h-1 rounded-full transition-all duration-500"
+        <div className="flex items-center gap-3 w-full text-[10px] font-mono text-gray-500">
+          <span className="w-10 text-right">{formatTime(displayProgress)}</span>
+          <div className="relative flex-1 flex items-center h-4 group">
+            <input
+              type="range"
+              min="0"
+              max={duration || 0}
+              value={displayProgress}
+              onChange={handleSeek}
+              onMouseUp={handleSeekEnd}
+              onTouchEnd={handleSeekEnd}
+              className="w-full h-1 bg-gray-700 rounded-full appearance-none cursor-pointer accent-green-500 hover:h-1.5 transition-all"
               style={{
-                width: duration ? `${(progress / duration) * 100}%` : "0%",
+                background: `linear-gradient(to right, #22c55e 0%, #22c55e ${(displayProgress / (duration || 1)) * 100}%, #374151 ${(displayProgress / (duration || 1)) * 100}%, #374151 100%)`
               }}
             />
           </div>
-          <span className="w-8">{formatTime(duration)}</span>
+          <span className="w-10">{formatTime(duration)}</span>
         </div>
       </div>
 
-      {/* Spacer — right */}
-      <div className="w-1/3" />
+      {/* Spacing — right */}
+      <div className="w-1/3 flex justify-end items-center gap-3 opacity-0 text-white">
+          {/* Volume control could go here */}
+      </div>
     </div>
   );
 }

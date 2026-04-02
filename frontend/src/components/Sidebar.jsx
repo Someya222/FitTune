@@ -59,6 +59,19 @@ export default function Sidebar() {
           🎵 Music
         </NavLink>
 
+        <NavLink
+          to="/music-preferences"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
+              isActive
+                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white shadow-md"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`
+          }
+        >
+          ⚙️ Music Preferences
+        </NavLink>
+
       </div>
 
       {/* Bottom Widget (Streak Placeholder) */}

@@ -1,10 +1,11 @@
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { useSpotify } from "../context/SpotifyContext";
 
 export default function WorkoutPlayer() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { deviceId, playTrack, token } = useSpotify();
 
   /* 🚫 Guard: direct /player access */
   if (!location.state || !location.state.exercises) {
@@ -71,6 +72,7 @@ export default function WorkoutPlayer() {
           if (!isResting) {
             speak("Rest time");
             setIsResting(true);
+            syncMusicWithWorkoutPhase("rest");
             return REST_TIME;
           }
 
@@ -79,6 +81,7 @@ export default function WorkoutPlayer() {
           setIsResting(false);
           setIndex(nextIndex);
           speak("Next exercise");
+          syncMusicWithWorkoutPhase(exercises[nextIndex].category);
           return exercises[nextIndex].duration;
         }
 
@@ -93,6 +96,42 @@ export default function WorkoutPlayer() {
     return () => clearInterval(timerRef.current);
   }, [paused, started, isResting, index, finished]);
 
+  const syncMusicWithWorkoutPhase = async (category) => {
+    if (!token || !deviceId) return;
+
+    let targetBPM = 120;
+    let targetEnergy = 0.7;
+
+    const cat = category?.toLowerCase() || "";
+    if (cat.includes("warm") || cat.includes("stretch")) {
+      targetBPM = 80;
+      targetEnergy = 0.4;
+    } else if (cat.includes("cardio") || cat.includes("run")) {
+      targetBPM = 130;
+      targetEnergy = 0.7;
+    } else if (cat.includes("hiit") || cat.includes("strength") || cat.includes("power")) {
+      targetBPM = 160;
+      targetEnergy = 0.9;
+    } else if (cat.includes("cool") || cat.includes("rest") || cat.includes("yoga")) {
+      targetBPM = 70;
+      targetEnergy = 0.3;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/spotify/recommendations?target_tempo=${targetBPM}&target_energy=${targetEnergy}&seed_genres=workout`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        await playTrack(data.map((t) => t.uri), data[0].uri);
+      }
+    } catch (err) {
+      console.error("Sync music error:", err);
+    }
+  };
+
   /* 💾 Save + redirect */
 useEffect(() => {
   if (!finished) return;
@@ -100,6 +139,7 @@ useEffect(() => {
   const save = async () => {
     try {
       speak("Workout complete");
+      syncMusicWithWorkoutPhase("cool down");
 
       const token = localStorage.getItem("token");
 

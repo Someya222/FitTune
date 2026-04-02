@@ -35,6 +35,21 @@ const userSchema = new mongoose.Schema(
     profileCompleted: {
       type: Boolean,
       default: false
+    },
+
+    musicPreferences: {
+      genres: [String],
+      languages: [String],
+      energyPreference: { 
+        type: String, 
+        enum: ["Light", "Medium", "High", "Beast Mode"],
+        default: "Medium"
+      },
+      vocalPreference: {
+        type: String,
+        enum: ["With vocals", "Instrumental", "Both"],
+        default: "Both"
+      }
     }
   },
   { timestamps: true }
