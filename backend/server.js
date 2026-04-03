@@ -18,6 +18,8 @@ import connectDB from "./config/db.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import workoutRoutes from "./modules/workout/workout.routes.js";
 import spotifyRoutes from "./modules/spotify/spotify.routes.js";
+import exerciseRoutes from "./modules/exercises/exercise.routes.js";
+import workoutPlanRoutes from "./modules/workout-plan/workoutPlan.routes.js";
 
 
 connectDB();
@@ -37,6 +39,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/workouts", workoutRoutes);
 
 app.use("/api/spotify", spotifyRoutes);
+app.use("/api/exercises", exerciseRoutes);
+app.use("/api/workout", workoutPlanRoutes);
 
 app.get("/", (req, res) => {
   res.send("FitTune Backend Running 💪");
